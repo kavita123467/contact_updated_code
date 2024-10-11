@@ -1,0 +1,110 @@
+<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+   <meta charset="UTF-8">  
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+   <title>Schedule Meeting</title>  
+   <style>  
+      .time-slot {  
+        display: inline-block;  
+        padding: 10px;  
+        margin: 5px;  
+        border: 1px solid #ccc;  
+        cursor: pointer;  
+      }  
+      .available {  
+        background-color: green;  
+        color: white;  
+      }  
+      .unavailable {  
+        background-color: red;  
+        color: white;  
+        cursor: not-allowed;
+      }  
+      .selected {  
+        background-color: blue; /* Color for selected slot */  
+        color: white;  
+      }  
+   </style>  
+</head>  
+<body>  
+   <h1>Select Date and Time for Meeting</h1>  
+   <form action="contact.php" method="post">  
+      <label for="date">Select Date:</label>  
+      <input type="date" id="date" name="date" required>  
+  
+      <label for="timezone">Select Time Zone:</label>  
+      <select id="timezone" name="timezone" required>  
+        <option value="Asia/Kolkata">India (IST, GMT+5:30)</option>  
+        <!-- Add more time zones as needed -->  
+      </select>  
+  
+      <h2>Select a Time Slot:</h2>  
+      <div id="time-slots"></div>  
+  
+      <input type="hidden" id="selected-time" name="selected_time">  
+      <button type="submit" id="submit-btn" disabled onclick="saveTimeInSessionStorage()">Next</button>  
+   </form>  
+  
+   <script>  
+      selectedTime = document.getElementById('selected-time');  
+      selectedDate = document.getElementById('date');  
+  
+      function saveTimeInSessionStorage(){  
+        sessionStorage.setItem('Date', selectedDate.value);  
+        sessionStorage.setItem('timeslot', selectedTime.value);  
+      }  
+  
+      // Prevent past dates from being selected  
+      var today = new Date().toISOString().split('T')[0];  
+      document.getElementById("date").setAttribute("min", today);  
+  
+      // Variable to keep track of currently selected time slot
+      let selectedSlot = null;
+  
+      // Fetch available time slots when date is selected  
+      document.getElementById('date').addEventListener('change', function() {  
+        const selectedDate = this.value;  
+  
+        // Fetch time slots from the server  
+        fetch(`get_times.php?date=${selectedDate}`)  
+           .then(response => response.json())  
+           .then(data => {  
+              const timeSlotsDiv = document.getElementById('time-slots');  
+              timeSlotsDiv.innerHTML = ''; // Clear previous time slots  
+  
+              data.forEach(slot => {  
+                const timeSlotBtn = document.createElement('div');  
+                timeSlotBtn.className = `time-slot ${slot.available ? 'available' : 'unavailable'}`;  
+                timeSlotBtn.textContent = slot.time;  
+  
+                if (slot.available) {  
+                   // Set up click handler for available time slots  
+                   timeSlotBtn.onclick = () => {  
+                      // Remove 'selected' class from the previously selected slot
+                      if (selectedSlot) {
+                        selectedSlot.classList.remove('selected');
+                      }
+
+                      // Add 'selected' class to the clicked slot
+                      timeSlotBtn.classList.add('selected');
+                      selectedSlot = timeSlotBtn; // Update the selected slot
+
+                      // Set selected time and enable the submit button
+                      document.getElementById('selected-time').value = slot.time;  
+                      document.getElementById('submit-btn').disabled = false;  
+  
+                      // Update session variables  
+                      saveTimeInSessionStorage();  
+                   };  
+                }  
+                timeSlotsDiv.appendChild(timeSlotBtn);  
+              });  
+           })  
+           .catch(error => {  
+              console.error('Error fetching time slots:', error);  
+           });  
+      });  
+   </script>  
+</body>  
+</html>
