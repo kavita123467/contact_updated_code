@@ -5,31 +5,35 @@ session_start();
 $date = '';
 $time = '';
 $captcha = '';
+$error = '';
+$success = '';
 
 // Check if the form has been submitted
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Set the session variables
-    $date = isset($_POST['date']) ? $_POST['date'] : '';
-    $time = isset($_POST['selected_time']) ? $_POST['selected_time'] : '';
-    $captcha = isset($_POST['captcha']) ? $_POST['captcha'] : '';
-    $session_captcha = $_SESSION['captcha_code'] ?? ''; // Get the current session captcha
-    echo $date."".$time;
-
+    // Set the variables
+    $date = $_POST['date'] ?? '';
+    $time = $_POST['selected_time'] ?? '';
+    $captcha = $_POST['captcha'] ?? '';
+    $session_captcha = $_SESSION['captcha'] ?? '';
+    $captcha_expires = $_SESSION['captcha_expires'] ?? 0;
+    
+    // Debug output
+    echo "Date: " . $date . "<br>Time: " . $time . "<br>Captcha: " . $captcha . 
+         "<br>Session Captcha: " . $session_captcha . "<br>Captcha Expired: " . $captcha_expires;
+    
     // Validate the captcha
-    if ($captcha !== $session_captcha) {
-        echo "Invalid CAPTCHA. Please try again.";
+    if ($captcha !== $session_captcha || time() > $captcha_expires) {
+        $error = "Invalid or expired CAPTCHA. Please try again.";
     } else {
-        // Now you can use the date and time in your PHP code
-        echo "Date: $date, Time: $time";
+        // Process the form data
+        // TODO: Add your form processing logic here
+        $success = "Appointment saved successfully. Date: " . htmlspecialchars($date) . ", Time: " . htmlspecialchars($time);
+        
+        // Clear the used CAPTCHA
+        unset($_SESSION['captcha']);
+        unset($_SESSION['captcha_expires']);
     }
 }
-
-// Generate the CAPTCHA code if not already set
-if (!isset($_SESSION['captcha_code'])) {
-    $_SESSION['captcha_code'] = generateCaptchaCode(); // Ensure you have this function defined
-}
-
-$captcha = $_SESSION['captcha_code'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -37,53 +41,6 @@ $captcha = $_SESSION['captcha_code'];
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact Form</title>
-    <script src="script.js"></script>
-
-    <script>
-        let timeLeft = 120; // Set to 2 minutes in seconds
-        let interval;
-
-        // Function to update the timer
-        function updateTimer() {
-            timeLeft--;
-            const timerElement = document.getElementById('timer');
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
-            timerElement.textContent = `Time remaining: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-
-            if (timeLeft <= 0) {
-                clearInterval(interval);  // Stop the timer
-                refreshCaptcha(); // Refresh the CAPTCHA when the timer ends
-                timeLeft = 120;  // Reset timer
-                interval = setInterval(updateTimer, 1000); // Restart the timer
-            }
-        }
-
-        // Function to refresh CAPTCHA
-        function refreshCaptcha() {
-            // Fetch a new CAPTCHA code from the server
-            fetch('captcha.php?refresh=true')
-                .then(response => response.blob()) // Expect a blob for the image
-                .then(blob => {
-                    // Create a URL for the new image
-                    const imageUrl = URL.createObjectURL(blob);
-                    document.getElementById('captcha-image').src = imageUrl; // Set new CAPTCHA image
-                    console.log('Captcha refreshed successfully!');
-                })
-                .catch(error => console.error('Error refreshing captcha:', error));
-        }
-
-        // DOMContentLoaded Event Listener
-        document.addEventListener('DOMContentLoaded', function() {
-            interval = setInterval(updateTimer, 1000);  // Start the timer
-            refreshCaptcha(); // Load the initial CAPTCHA
-        });
-
-        document.getElementById('refresh-captcha').addEventListener('click', function() {
-            refreshCaptcha();  // Refresh the CAPTCHA
-        });
-    </script>
-
     <style>
         .circle {
             width: 100px;
@@ -92,18 +49,28 @@ $captcha = $_SESSION['captcha_code'];
         }
         .refresh {
             width: 60px;
+            cursor: pointer;
         }
         .rotateImage {
             transform: rotate(360deg);
             transition: 0.6s ease-in-out;
         }
+        .error { color: red; }
+        .success { color: green; }
     </style>
 </head>
 <body>
+    <?php if ($error): ?>
+        <p class="error"><?php echo htmlspecialchars($error); ?></p>
+    <?php endif; ?>
+    <?php if ($success): ?>
+        <p class="success"><?php echo htmlspecialchars($success); ?></p>
+    <?php endif; ?>
+
     <form action="check_availability.php" method="post" id="appointment-form">
         <!-- Hidden fields for date and time -->
         <input type="hidden" name="date" value="<?php echo htmlspecialchars($date); ?>">
-        <input type="hidden" name="time" value="<?php echo htmlspecialchars($time); ?>">
+        <input type="hidden" name="selected_time" value="<?php echo htmlspecialchars($time); ?>">
 
         <!-- Name -->
         <label for="name">Name:</label>
@@ -115,20 +82,18 @@ $captcha = $_SESSION['captcha_code'];
 
         <!-- Phone -->
         <label for="phone">Phone:</label>
-        <input type="text" id="phone" name="phone" required pattern="\d{10}" placeholder="Enter 10 digit phone number"><br><br>
+        <input type="tel" id="phone" name="phone" required pattern="\d{10}" placeholder="Enter 10 digit phone number"><br><br>
 
         <!-- Captcha -->
-        <label for="captcha">Captcha: <?php echo $captcha; ?></label>
+        <label for="captcha">Captcha:</label>
         <input type="text" id="captcha" name="captcha" required><br><br>
         <img id="captcha-image" src="captcha.php" alt="CAPTCHA Image" />
 
         <!-- Timer Display -->
         <div id="timer">Time remaining: 2:00</div>
         <div class="circle">
-            <img class="refresh" src="https://www.svgrepo.com/show/533701/refresh-cw.svg" alt="">
+            <img class="refresh" src="https://www.svgrepo.com/show/533701/refresh-cw.svg" alt="Refresh CAPTCHA" id="refresh-captcha">
         </div>
-        <br>
-        <button type="button" id="refresh-captcha">Refresh CAPTCHA</button>
 
         <!-- City -->
         <label for="city">City:</label>
@@ -141,5 +106,40 @@ $captcha = $_SESSION['captcha_code'];
         <!-- Submit Button -->
         <input type="submit" class="next-button" value="Save Appointment">
     </form>
+
+    <script>
+        let timeLeft = 120; // Set to 2 minutes in seconds
+        let interval;
+
+        function updateTimer() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer').textContent = `Time remaining: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+            if (timeLeft <= 0) {
+                clearInterval(interval);
+                refreshCaptcha();
+            } else {
+                timeLeft--;
+            }
+        }
+
+        function refreshCaptcha() {
+            const captchaImage = document.getElementById('captcha-image');
+            captchaImage.src = 'captcha.php?t=' + new Date().getTime();
+            timeLeft = 120; // Reset timer to 2 minutes
+            clearInterval(interval);
+            interval = setInterval(updateTimer, 1000);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            interval = setInterval(updateTimer, 1000);
+            document.getElementById('refresh-captcha').addEventListener('click', function() {
+                this.classList.add('rotateImage');
+                refreshCaptcha();
+                setTimeout(() => this.classList.remove('rotateImage'), 600);
+            });
+        });
+    </script>
 </body>
 </html>
