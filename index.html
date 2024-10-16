@@ -1,110 +1,265 @@
-<!DOCTYPE html>  
-<html lang="en">  
-<head>  
-   <meta charset="UTF-8">  
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-   <title>Schedule Meeting</title>  
-   <style>  
-      .time-slot {  
-        display: inline-block;  
-        padding: 10px;  
-        margin: 5px;  
-        border: 1px solid #ccc;  
-        cursor: pointer;  
-      }  
-      .available {  
-        background-color: green;  
-        color: white;  
-      }  
-      .unavailable {  
-        background-color: red;  
-        color: white;  
-        cursor: not-allowed;
-      }  
-      .selected {  
-        background-color: blue; /* Color for selected slot */  
-        color: white;  
-      }  
-   </style>  
-</head>  
-<body>  
-   <h1>Select Date and Time for Meeting</h1>  
-   <form action="contact.php" method="post">  
-      <label for="date">Select Date:</label>  
-      <input type="date" id="date" name="date" required>  
-  
-      <label for="timezone">Select Time Zone:</label>  
-      <select id="timezone" name="timezone" required>  
-        <option value="Asia/Kolkata">India (IST, GMT+5:30)</option>  
-        <!-- Add more time zones as needed -->  
-      </select>  
-  
-      <h2>Select a Time Slot:</h2>  
-      <div id="time-slots"></div>  
-  
-      <input type="hidden" id="selected-time" name="selected_time">  
-      <button type="submit" id="submit-btn" disabled onclick="saveTimeInSessionStorage()">Next</button>  
-   </form>  
-  
-   <script>  
-      selectedTime = document.getElementById('selected-time');  
-      selectedDate = document.getElementById('date');  
-  
-      function saveTimeInSessionStorage(){  
-        sessionStorage.setItem('Date', selectedDate.value);  
-        sessionStorage.setItem('timeslot', selectedTime.value);  
-      }  
-  
-      // Prevent past dates from being selected  
-      var today = new Date().toISOString().split('T')[0];  
-      document.getElementById("date").setAttribute("min", today);  
-  
-      // Variable to keep track of currently selected time slot
-      let selectedSlot = null;
-  
-      // Fetch available time slots when date is selected  
-      document.getElementById('date').addEventListener('change', function() {  
-        const selectedDate = this.value;  
-  
-        // Fetch time slots from the server  
-        fetch(`get_times.php?date=${selectedDate}`)  
-           .then(response => response.json())  
-           .then(data => {  
-              const timeSlotsDiv = document.getElementById('time-slots');  
-              timeSlotsDiv.innerHTML = ''; // Clear previous time slots  
-  
-              data.forEach(slot => {  
-                const timeSlotBtn = document.createElement('div');  
-                timeSlotBtn.className = `time-slot ${slot.available ? 'available' : 'unavailable'}`;  
-                timeSlotBtn.textContent = slot.time;  
-  
-                if (slot.available) {  
-                   // Set up click handler for available time slots  
-                   timeSlotBtn.onclick = () => {  
-                      // Remove 'selected' class from the previously selected slot
-                      if (selectedSlot) {
-                        selectedSlot.classList.remove('selected');
-                      }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedule Meeting</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #0066cc;
+        }
+        .appointment-info {
+            margin-bottom: 20px;
+        }
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+        .calendar-header {
+            font-weight: bold;
+            text-align: center;
+            padding: 5px;
+        }
+        .calendar-day {
+            text-align: center;
+            padding: 10px;
+            background-color: #e6f2ff;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .calendar-day:hover, .calendar-day.selected {
+            background-color: #0066cc;
+            color: white;
+        }
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .time-slot {
+            padding: 10px;
+            text-align: center;
+            background-color: #e6f2ff;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .time-slot:hover, .time-slot.selected {
+            background-color: #0066cc;
+            color: white;
+        }
+        .available {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .unavailable {
+            background-color: #F44336;
+            color: white;
+            cursor: not-allowed;
+        }
+        select, input[type="date"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #0066cc;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0052a3;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Book an Appointment</h1>
+        <div class="appointment-info">
+            <p>Kaizen is ready to provide the right solution according to your needs</p>
+            <p><strong>30 min</strong></p>
+            <p>Book an Appointment to know how Kaizen smartbuild can benefit your Business.</p>
+        </div>
+        
+        <h2>Select a Date & Time</h2>
+        <div id="custom-calendar" class="calendar">
+            <!-- Calendar will be populated by JavaScript -->
+        </div>
 
-                      // Add 'selected' class to the clicked slot
-                      timeSlotBtn.classList.add('selected');
-                      selectedSlot = timeSlotBtn; // Update the selected slot
+        <form action="contact.php" method="post">
+            <input type="hidden" id="selected-date" name="date" required>
+            
+            <label for="timezone">Select Time Zone:</label>
+            <select id="timezone" name="timezone" required>
+                <option value="Asia/Kolkata">India (IST, GMT+5:30)</option>
+                <!-- Add more time zones as needed -->
+            </select>
 
-                      // Set selected time and enable the submit button
-                      document.getElementById('selected-time').value = slot.time;  
-                      document.getElementById('submit-btn').disabled = false;  
-  
-                      // Update session variables  
-                      saveTimeInSessionStorage();  
-                   };  
-                }  
-                timeSlotsDiv.appendChild(timeSlotBtn);  
-              });  
-           })  
-           .catch(error => {  
-              console.error('Error fetching time slots:', error);  
-           });  
-      });  
-   </script>  
-</body>  
+            <h2>Select a Time Slot:</h2>
+            <div id="time-slots" class="time-slots"></div>
+
+            <input type="hidden" id="selected-time" name="selected_time">
+            <button type="submit" id="submit-btn" disabled>Next</button>
+        </form>
+    </div>
+
+    <script>
+        let currentYear, currentMonth;
+        let selectedSlot = null;
+
+        function generateCalendar(year, month) {
+            currentYear = year;
+            currentMonth = month;
+            const calendarElement = document.getElementById('custom-calendar');
+            calendarElement.innerHTML = '';
+
+            const navigationDiv = document.createElement('div');
+            navigationDiv.innerHTML = `
+                <button onclick="changeMonth(-1)">&lt; Prev</button>
+                <span>${new Date(year, month).toLocaleString('default', { month: 'long' })} ${year}</span>
+                <button onclick="changeMonth(1)">Next &gt;</button>
+            `;
+            calendarElement.appendChild(navigationDiv);
+
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const firstDay = new Date(year, month, 1).getDay();
+
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            days.forEach(day => {
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'calendar-header';
+                dayHeader.textContent = day;
+                calendarElement.appendChild(dayHeader);
+            });
+
+            for (let i = 0; i < firstDay; i++) {
+                calendarElement.appendChild(document.createElement('div'));
+            }
+
+            const today = new Date();
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                dayElement.textContent = i;
+                
+                const currentDate = new Date(year, month, i);
+                if (currentDate < today) {
+                    dayElement.classList.add('disabled');
+                    dayElement.style.color = '#ccc';
+                    dayElement.style.cursor = 'not-allowed';
+                } else {
+                    dayElement.onclick = () => selectDate(year, month, i);
+                }
+                
+                calendarElement.appendChild(dayElement);
+            }
+        }
+
+        function changeMonth(delta) {
+            currentMonth += delta;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            } else if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            generateCalendar(currentYear, currentMonth);
+        }
+
+        function selectDate(year, month, day) {
+            const selectedDate = new Date(year, month, day);
+            document.getElementById('selected-date').value = selectedDate.toISOString().split('T')[0];
+            
+            document.querySelectorAll('.calendar-day').forEach(el => el.classList.remove('selected'));
+            event.target.classList.add('selected');
+
+            fetchTimeSlots(selectedDate);
+        }
+
+        function fetchTimeSlots(date) {
+            const timeSlots = generateTimeSlots(date);
+            const timeSlotsContainer = document.getElementById('time-slots');
+            timeSlotsContainer.innerHTML = '';
+
+            timeSlots.forEach(slot => {
+                const timeSlot = document.createElement('div');
+                timeSlot.className = `time-slot ${slot.available ? 'available' : 'unavailable'}`;
+                timeSlot.textContent = slot.time;
+                if (slot.available) {
+                    timeSlot.onclick = () => selectTimeSlot(slot.time);
+                }
+                timeSlotsContainer.appendChild(timeSlot);
+            });
+        }
+
+        function generateTimeSlots(date) {
+            const slots = [];
+            const startTime = new Date(date);
+            startTime.setHours(10, 0, 0, 0);
+            const endTime = new Date(date);
+            endTime.setHours(18, 0, 0, 0);
+
+            while (startTime < endTime) {
+                const timeString = startTime.toTimeString().slice(0, 5);
+                slots.push({
+                    time: timeString,
+                    available: Math.random() < 0.7
+                });
+                startTime.setMinutes(startTime.getMinutes() + 30);
+            }
+
+            return slots;
+        }
+
+        function selectTimeSlot(time) {
+            document.getElementById('selected-time').value = time;
+            document.getElementById('submit-btn').disabled = false;
+
+            document.querySelectorAll('.time-slot').forEach(el => {
+                if (el.textContent === time) {
+                    el.classList.add('selected');
+                } else {
+                    el.classList.remove('selected');
+                }
+            });
+        }
+
+        function saveTimeInSessionStorage() {
+            const selectedDate = document.getElementById('selected-date');
+            const selectedTime = document.getElementById('selected-time');
+            sessionStorage.setItem('Date', selectedDate.value);
+            sessionStorage.setItem('timeslot', selectedTime.value);
+        }
+
+        const currentDate = new Date();
+        generateCalendar(currentDate.getFullYear(), currentDate.getMonth());
+
+        document.getElementById('submit-btn').addEventListener('click', saveTimeInSessionStorage);
+    </script>
+</body>
 </html>

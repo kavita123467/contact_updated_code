@@ -242,8 +242,8 @@ if (isset($_POST['submit'])) {
                 $mail->isSMTP();                                      // Send using SMTP
                 $mail->Host = 'smtp.gmail.com';                       // Set the SMTP server to send through
                 $mail->SMTPAuth = true;                               // Enable SMTP authentication
-                $mail->Username = '';                     //SMTP username
-                $mail->Password = '';             // SMTP password
+                $mail->Username = 'perfectiongeeks@gmail.com';                     //SMTP username
+                $mail->Password = 'odloplohkpmuyqhq';             // SMTP password
                 $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;  // Enable TLS encryption
                 $mail->Port = 587;                                    // TCP port to connect to
 
@@ -352,8 +352,8 @@ if (isset($_POST['submit'])) {
                     $mail->isSMTP();                                      // Send using SMTP
                     $mail->Host = 'smtp.gmail.com';                       // Set the SMTP server to send through
                     $mail->SMTPAuth = true;                               // Enable SMTP authentication
-                    $mail->Username = '';                     //SMTP username
-                    $mail->Password = '';              // SMTP password
+                    $mail->Username = 'perfectiongeeks@gmail.com';                     //SMTP username
+                    $mail->Password = 'odloplohkpmuyqhq';              // SMTP password
                     $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;  // Enable TLS encryption
                     $mail->Port = 587;                                    // TCP port to connect to
 
