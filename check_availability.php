@@ -13,6 +13,9 @@ $user = 'newuser';
 $pass = 'root123';
 
 // Retrieve the posted values from the form
+if (isset($_POST['date']) && isset($_POST['selected_time'])) {
+    $date_in_ist = $_POST['date'] ?? null;
+    $time_in_ist = $_POST['selected_time'] ?? null;
 $date = $_POST['date'] ?? null;
 $time = $_POST['selected_time'] ?? null;
 $name = $_POST['name'] ?? null;
@@ -34,18 +37,18 @@ elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Invalid email f
 if (empty($phone)) $errors[] = 'Phone is required';
 
 // Format date and time
-if (!empty($date) && !empty($time)) {
-    $datetime = DateTime::createFromFormat('Y-m-d H:i', "$date $time", new DateTimeZone('Asia/Kolkata'));
-    if ($datetime && $datetime->format('Y-m-d H:i') === "$date $time") {
-        $time_in_ist = $datetime->format('H:i');
-        $date_in_ist = $datetime->format('Y-m-d');
-    } else {
-        $errors[] = 'Invalid date or time format.';
-    }
-} else {
-    $date_in_ist = $date;
-    $time_in_ist = $time;
-}
+// if (!empty($date) && !empty($time)) {
+//     $datetime = DateTime::createFromFormat('Y-m-d H:i', "$date $time", new DateTimeZone('Asia/Kolkata'));
+//     if ($datetime && $datetime->format('Y-m-d H:i') === "$date $time") {
+//         $time_in_ist = $datetime->format('H:i');
+//         $date_in_ist = $datetime->format('Y-m-d');
+//     } else {
+//         $errors[] = 'Invalid date or time format.';
+//     }
+// } else {
+//     $date_in_ist = $date;
+//     $time_in_ist = $time;
+// }
 
 // Disable past date selection
 $today = new DateTime('now', new DateTimeZone('Asia/Kolkata'));
@@ -101,9 +104,14 @@ $stmt = $mysqli->prepare($query);
 
 if ($stmt) {
     $stmt->bind_param('sssssss', $date_in_ist, $time_in_ist, $name, $email, $phone, $city, $business);
+    echo "inserted";
+    var_dump($date_in_ist, $time_in_ist, $name, $email, $phone, $city, $business);
+
+
 
     if ($stmt->execute()) {
         // Send confirmation email to host
+        echo "mail";
         $to = "perfectiongeeks@gmail.com";
         $fromEmail = $email;
         $fromName = $name;
@@ -149,8 +157,8 @@ if ($stmt) {
                 $mail->isSMTP();
                 $mail->Host = 'smtp.gmail.com';
                 $mail->SMTPAuth = true;
-                $mail->Username = 'perfectiongeeks@gmail.com';
-                $mail->Password = 'odloplohkpmuyqhq';
+                $mail->Username = 'kavitaperfectiongeeks@gmail.com';
+                $mail->Password = 'vtghjxkjqqimrbqn';
                 $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
                 $mail->Port = 587;
     
@@ -162,6 +170,7 @@ if ($stmt) {
                 $mail->Body = $message1;
     
                 $mail->send();
+                echo "mailsend";
             } catch (Exception $e) {
                 error_log("Error sending email to host: " . $mail->ErrorInfo);
             }
@@ -247,6 +256,10 @@ if ($stmt) {
     $response = array('status' => 'error', 'message' => 'Error: ' . $mysqli->error);
     echo json_encode($response);
     exit;
+}
+}
+else {
+    die(json_encode(array('status' => 'error', 'message' => 'Required fields are missing')));
 }
 
 $check_stmt->close();

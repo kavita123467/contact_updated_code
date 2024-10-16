@@ -66,13 +66,9 @@
       document.getElementById('date').addEventListener('change', function() {  
         const selectedDate = this.value;  
   
-    fetch(`http://localhost/Contactus/get_times.php?date=${selectedDate}`)  
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok ' + response.statusText);
-                    }
-                    return response.json();  
-                }) 
+        // Fetch time slots from the server  
+        fetch(`get_times.php?date=${selectedDate}`)  
+           .then(response => response.json())  
            .then(data => {  
               const timeSlotsDiv = document.getElementById('time-slots');  
               timeSlotsDiv.innerHTML = ''; // Clear previous time slots  
