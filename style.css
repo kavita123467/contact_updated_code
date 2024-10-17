@@ -1,108 +1,89 @@
-body {  
-    font-family: Arial, sans-serif;  
-    background-image: url('background-image.jpg'); /* Replace with the actual image URL */  
-    background-size: cover;  
-    background-position: center;  
-    background-attachment: fixed;  
-  }  
-    
-  header {  
-    background-color: rgba(0, 0, 0, 0.5);  
-    color: #fff;  
-    padding: 20px;  
-    text-align: center;  
-  }  
-    
-  main {  
-    display: flex;  
-    justify-content: center;  
-    align-items: center;  
-    height: 100vh;  
-  }  
-    
-  .booking-system {  
-    background-color: #fff;  
-    padding: 20px;  
-    border-radius: 10px;  
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);  
-  }  
-    
-  .calendar {  
-    margin-bottom: 20px;  
-  }  
-    
-  .time-zone-selector {  
-    margin-bottom: 20px;  
-  }  
-    
-  .time-slots input[type="time"] {  
-    width: 100%;  
-    height: 40px;  
-    padding: 10px;  
-    border: 1px solid #ccc;  
-    border-radius: 5px;  
-    font-size: 16px;  
- }  
-   
- .time-slots input[type="time"]:focus {  
-    border-color: #aaa;  
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);  
- }  
-    
-  .time-slot:hover {  
-    background-color: #87ceeb;  
-  }  
-    
-  .next-button {  
-    background-color: #4CAF50;  
-    color: #fff;  
-    border: none;  
-    padding: 10px 20px;  
-    border-radius: 10px;  
-    cursor: pointer;  
-  }  
-    
-  .next-button:hover {  
-    background-color: #3e8e41;  
-  }  
-    
-  footer {  
-    background-color: rgba(0, 0, 0, 0.5);  
-    color: #fff;  
-    padding: 10px;  
-    text-align: center;  
-    position: fixed;  
-    bottom: 0;  
-    width: 100%;  
-  }  
-    
-  .social-media-icons {  
-    display: flex;  
-    justify-content: space-between;  
-    align-items: center;  
-  }  
-    
-  .facebook-icon, .instagram-icon, .linkedin-icon, .twitter-icon {  
-    width: 20px;  
-    height: 20px;  
-    margin: 0 10px;  
-    background-size: cover;  
-    background-position: center;  
-  }  
-    
-  .facebook-icon {  
-    background-image: url('facebook-icon.png');  
-  }  
-    
-  .instagram-icon {  
-    background-image: url('instagram-icon.png');  
-  }  
-    
-  .linkedin-icon {  
-    background-image: url('linkedin-icon.png');  
-  }  
-    
-  .twitter-icon {  
-    background-image: url('twitter-icon.png');  
-  }
-  
+body {
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  margin: 0;
+  padding: 20px;
+  background-color: #f0f0f0;
+}
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+h1, h2 {
+  color: #0066cc;
+}
+.appointment-info {
+  margin-bottom: 20px;
+}
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  margin-bottom: 20px;
+}
+.calendar-header {
+  font-weight: bold;
+  text-align: center;
+  padding: 5px;
+}
+.calendar-day {
+  text-align: center;
+  padding: 10px;
+  background-color: #e6f2ff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.calendar-day:hover, .calendar-day.selected {
+  background-color: #0066cc;
+  color: white;
+}
+.time-slots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.time-slot {
+  padding: 10px;
+  text-align: center;
+  background-color: #e6f2ff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.time-slot:hover, .time-slot.selected {
+  background-color: #0066cc;
+  color: white;
+}
+.available {
+  background-color: #4CAF50;
+  color: white;
+}
+.unavailable {
+  background-color: #F44336;
+  color: white;
+  cursor: not-allowed;
+}
+select, input[type="date"] {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+button {
+  background-color: #0066cc;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+button:hover {
+  background-color: #0052a3;
+}
+button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}

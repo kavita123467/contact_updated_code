@@ -35,6 +35,7 @@ if (empty($name)) $errors[] = 'Name is required';
 if (empty($email)) $errors[] = 'Email is required';
 elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Invalid email format';
 if (empty($phone)) $errors[] = 'Phone is required';
+if (empty($captcha)) $errors[] = 'captcha is required';
 
 // Format date and time
 // if (!empty($date) && !empty($time)) {
